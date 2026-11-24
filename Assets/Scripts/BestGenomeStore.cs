@@ -21,7 +21,7 @@ public static class BestGenomeStore
 
         if (!PlayerPrefs.HasKey(Key))
         {
-            message = $"Nenhum save encontrado (chave '{Key}'). Use 'Salvar melhor' antes de carregar.";
+            message = $"Nenhum save encontrado ('{Key}'). Use 'Salvar melhor' antes de carregar.";
             return false;
         }
 
@@ -33,7 +33,7 @@ public static class BestGenomeStore
         }
         catch (Exception exception)
         {
-            message = $"Save corrompido (JSON invalido): {exception.Message}";
+            message = $"Save corrompido (JSON inválido): {exception.Message}";
             return false;
         }
 
@@ -45,14 +45,14 @@ public static class BestGenomeStore
 
         if (loaded.version != EvolutionSnapshot.CurrentVersion)
         {
-            message = $"Save recusado: versao {loaded.version} do formato; esta build le a versao {EvolutionSnapshot.CurrentVersion}.";
+            message = $"Save recusado: versão {loaded.version}, esperada {EvolutionSnapshot.CurrentVersion}.";
             return false;
         }
 
         int savedCount = loaded.weights == null ? 0 : loaded.weights.Length;
         if (savedCount != NeuralNetwork.WeightCount)
         {
-            message = $"Save incompativel: {savedCount} pesos no save, mas a rede atual espera {NeuralNetwork.WeightCount}.";
+            message = $"Save incompatível: {savedCount} pesos no save, a rede espera {NeuralNetwork.WeightCount}.";
             return false;
         }
 
@@ -60,7 +60,7 @@ public static class BestGenomeStore
         {
             if (float.IsNaN(weight) || float.IsInfinity(weight))
             {
-                message = "Save recusado: contem pesos invalidos (NaN/infinito).";
+                message = "Save recusado: pesos inválidos (NaN ou infinito).";
                 return false;
             }
         }

@@ -29,6 +29,6 @@ public readonly struct EpisodeMetrics
     public override string ToString()
     {
         return $"chegou={ReachedGoal} colidiu={Collided} tempo={TimeSeconds:F1}s " +
-               $"dist.real={RealDistance:F1} dist.ref={ReferenceDistance:F1} eficiencia={EfficiencyText}";
+               $"dist.real={RealDistance:F1} dist.ref={ReferenceDistance:F1} eficiência={EfficiencyText}";
     }
 }

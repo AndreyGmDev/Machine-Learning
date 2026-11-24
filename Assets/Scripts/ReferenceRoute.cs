@@ -31,14 +31,14 @@ public sealed class ReferenceRoute
 
         if (!grid.TryGetWalkableCell(start, out int startCell) || !grid.TryGetWalkableCell(goal, out int goalCell))
         {
-            Debug.LogWarning("ReferenceRoute: Spawn ou Goal esta bloqueado/fora do grid (sem celula navegavel por perto).");
+            Debug.LogWarning("ReferenceRoute: Spawn ou Goal bloqueado ou fora do grid.");
             return null;
         }
 
         List<int> cells = AStar(grid, startCell, goalCell);
         if (cells == null)
         {
-            Debug.LogWarning("ReferenceRoute: A* nao encontrou caminho entre o SpawnPoint e o Goal.");
+            Debug.LogWarning("ReferenceRoute: A* não encontrou caminho entre o SpawnPoint e o Goal.");
             return null;
         }
 

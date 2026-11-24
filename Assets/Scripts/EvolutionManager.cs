@@ -144,7 +144,7 @@ public sealed class EvolutionManager : MonoBehaviour
         }
     }
 
-    // ---------- Treino ----------
+    #region Treino
 
     private void BeginGeneration()
     {
@@ -174,7 +174,7 @@ public sealed class EvolutionManager : MonoBehaviour
 
         EvolvingShip bestShip = ships.Find(ship => ReferenceEquals(ship.Genome, population[0]));
         BestOfGenerationMetrics = bestShip.Metrics;
-        Debug.Log($"Geracao {Generation}: melhor {BestFitness:F2}, media {AverageFitness:F2} | melhor da geracao: {BestOfGenerationMetrics}");
+        Debug.Log($"Geração {Generation}: melhor {BestFitness:F2}, média {AverageFitness:F2} | {BestOfGenerationMetrics}");
 
         // Guarda uma copia do melhor genoma ja visto (a populacao continua sendo alterada).
         if (bestGenome == null || BestFitness > bestGenome.Fitness)
@@ -226,14 +226,15 @@ public sealed class EvolutionManager : MonoBehaviour
         BeginGeneration(); // reavalia a populacao atual; nao cria geracao nova.
         Report("Treino retomado.");
     }
+    #endregion
 
-    // ---------- Persistencia ----------
+    #region Persistência
 
     public void SaveBest()
     {
         if (bestGenome == null)
         {
-            Report("Ainda nao ha melhor genoma: aguarde o fim da primeira geracao.", true);
+            Report("Ainda não há melhor genoma. Aguarde o fim da primeira geração.", true);
             return;
         }
 
@@ -249,14 +250,14 @@ public sealed class EvolutionManager : MonoBehaviour
             savedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
         };
         BestGenomeStore.Save(snapshot);
-        Report($"Melhor genoma salvo: seed {snapshot.seed}, geracao {snapshot.generation}, fitness {snapshot.bestFitness:F2}.");
+        Report($"Melhor genoma salvo: seed {snapshot.seed}, geração {snapshot.generation}, fitness {snapshot.bestFitness:F2}.");
     }
 
     public void LoadBest()
     {
         if (Mode == RunMode.Validation)
         {
-            Report("Aguarde o fim da validacao para carregar.", true);
+            Report("Aguarde o fim da validação para carregar.", true);
             return;
         }
 
@@ -270,7 +271,7 @@ public sealed class EvolutionManager : MonoBehaviour
         Genome loaded = Genome.FromWeights(snapshot.weights, snapshot.bestFitness);
         StopShips();
         Mode = RunMode.Playback;
-        Report($"Save carregado (seed {snapshot.seed}, geracao {snapshot.generation}, fitness {snapshot.bestFitness:F2}, salvo em {snapshot.savedAt}). Executando sem criar geracao nova...");
+        Report($"Save carregado: seed {snapshot.seed}, geração {snapshot.generation}, fitness {snapshot.bestFitness:F2}, salvo em {snapshot.savedAt}.");
         RunEpisode(loaded);
     }
 
@@ -278,18 +279,19 @@ public sealed class EvolutionManager : MonoBehaviour
     {
         bool existed = BestGenomeStore.Delete();
         Report(existed
-            ? $"Save apagado (PlayerPrefs.DeleteKey '{BestGenomeStore.Key}')."
-            : $"Nao havia save para apagar (chave '{BestGenomeStore.Key}').");
+            ? $"Save apagado ('{BestGenomeStore.Key}')."
+            : $"Não havia save para apagar ('{BestGenomeStore.Key}').");
     }
 
     private void FinishPlayback(EvolvingShip ship)
     {
         Mode = RunMode.Stopped;
-        Report($"Genoma salvo executado (seed {playbackSnapshot.seed}, geracao {playbackSnapshot.generation}): " +
-               $"{ship.Metrics} | fitness {ship.Fitness:F2} (salvo: {playbackSnapshot.bestFitness:F2}).");
+        Report($"Genoma salvo executado (seed {playbackSnapshot.seed}, geração {playbackSnapshot.generation}): " +
+               $"{ship.Metrics} | fitness {ship.Fitness:F2}, salvo {playbackSnapshot.bestFitness:F2}.");
     }
+    #endregion
 
-    // ---------- Validacao ----------
+    #region Validação
 
     public void RunValidation()
     {
@@ -298,13 +300,13 @@ public sealed class EvolutionManager : MonoBehaviour
 
         if (bestGenome == null)
         {
-            Report("Ainda nao ha melhor genoma para validar: aguarde o fim da primeira geracao.", true);
+            Report("Ainda não há melhor genoma para validar. Aguarde o fim da primeira geração.", true);
             return;
         }
 
         if (scenarios.Count == 0)
         {
-            Report("Configure os cenarios de validacao no Inspector do EvolutionManager.", true);
+            Report("Configure os cenários de validação no Inspector do EvolutionManager.", true);
             return;
         }
 
@@ -314,7 +316,7 @@ public sealed class EvolutionManager : MonoBehaviour
         validationGenome = bestGenome.Clone();
         scenarioIndex = -1;
         Mode = RunMode.Validation;
-        Report($"Validando o melhor genoma (seed {randomSeed}, geracao {bestGenomeGeneration}, fitness {validationGenome.Fitness:F2}) em {scenarios.Count} cenarios, sem evoluir...");
+        Report($"Validando o melhor genoma: seed {randomSeed}, geração {bestGenomeGeneration}, fitness {validationGenome.Fitness:F2}, {scenarios.Count} cenários.");
         AdvanceValidation();
     }
 
@@ -338,22 +340,23 @@ public sealed class EvolutionManager : MonoBehaviour
 
         int successes = validationResults.Count(result => result.Success);
         bool validated = successes >= RequiredScenarioSuccesses;
-        ValidationVerdict = $"{(validated ? "VALIDADO" : "NAO VALIDADO")}: {successes}/{validationResults.Count} cenarios sem colisao e com chegada (minimo {RequiredScenarioSuccesses}).";
+        ValidationVerdict = $"{(validated ? "VALIDADO" : "NÃO VALIDADO")}: {successes}/{validationResults.Count} cenários com chegada e sem colisão (mínimo {RequiredScenarioSuccesses}).";
 
         var table = new System.Text.StringBuilder();
-        table.AppendLine($"Validacao do melhor genoma (seed {randomSeed}, geracao {bestGenomeGeneration}, fitness {bestGenome.Fitness:F2})");
-        table.AppendLine($"{"Cenario",-20}{"Chegou",-8}{"Colidiu",-9}{"Tempo(s)",-10}{"Dist.real",-11}{"Dist.ref",-10}{"Eficiencia",-10}");
+        table.AppendLine($"Validação do melhor genoma: seed {randomSeed}, geração {bestGenomeGeneration}, fitness {bestGenome.Fitness:F2}");
+        table.AppendLine("Cenário | Chegou | Colidiu | Tempo(s) | Dist.real | Dist.ref | Eficiência");
         foreach (ScenarioResult result in validationResults)
         {
             EpisodeMetrics m = result.Metrics;
-            table.AppendLine($"{result.Name,-20}{m.ReachedGoal,-8}{m.Collided,-9}{m.TimeSeconds,-10:F1}{m.RealDistance,-11:F1}{m.ReferenceDistance,-10:F1}{m.EfficiencyText,-10}");
+            table.AppendLine($"{result.Name} | {m.ReachedGoal} | {m.Collided} | {m.TimeSeconds:F1} | {m.RealDistance:F1} | {m.ReferenceDistance:F1} | {m.EfficiencyText}");
         }
         table.Append(ValidationVerdict);
 
         Report(table.ToString());
     }
+    #endregion
 
-    // ---------- Cenario / rota de referencia ----------
+    #region Cenário e rota de referência
 
     // scenario == null restaura o cenario de treino.
     private void ApplyLayout(ValidationScenario scenario)
@@ -378,10 +381,11 @@ public sealed class EvolutionManager : MonoBehaviour
 
         reference = ReferenceRoute.Find(spawnPoint.position, goal.position, shipPrefab.ObstacleMask, referenceCellSize, referenceAgentRadius, smoothReference);
         if (reference == null)
-            Debug.LogWarning("Sem rota de referencia neste cenario: a eficiencia sera 'n/d'. O Goal esta alcancavel?", this);
+            Debug.LogWarning("Sem rota de referência neste cenário: eficiência n/d. O Goal está alcançável?", this);
     }
+    #endregion
 
-    // ---------- Utilitarios ----------
+    #region Utilitários
 
     private void RunEpisode(Genome genome)
     {
@@ -404,6 +408,7 @@ public sealed class EvolutionManager : MonoBehaviour
         else
             Debug.Log(message, this);
     }
+    #endregion
 
     private void OnDrawGizmos()
     {
